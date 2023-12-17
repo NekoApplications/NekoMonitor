@@ -5,7 +5,6 @@ import oshi.SystemInfo
 import oshi.hardware.HardwareAbstractionLayer
 import oshi.software.os.OperatingSystem
 import java.lang.management.ManagementFactory
-import java.util.concurrent.locks.LockSupport
 
 object SystemInfoProvider {
     private val os = ManagementFactory.getOperatingSystemMXBean()
@@ -106,7 +105,7 @@ object SystemInfoProvider {
 
     private fun diffPacketCountPerSec(prov: () -> Long):Long{
         val before = prov()
-        LockSupport.parkNanos(1000000000L)
+        Thread.sleep(1000)
         val after = prov()
         return after - before
     }

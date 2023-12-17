@@ -16,9 +16,8 @@ object Server : net.zhuruoling.nm.application.Application() {
     override val applicationId: String
         get() = "server"
 
-    private lateinit var serverConfig: ServerConfig
+    lateinit var serverConfig: ServerConfig
     private lateinit var configPath: Path
-
 
     override fun run(args: List<String>) {
         configPath = Path(

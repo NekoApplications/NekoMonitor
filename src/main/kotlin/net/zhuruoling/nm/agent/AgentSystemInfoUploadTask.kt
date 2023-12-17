@@ -6,7 +6,7 @@ import java.util.TimerTask
 class AgentSystemInfoUploadTask: TimerTask() {
     private val logger = LoggerFactory.getLogger("SystemInfoUpload")
     override fun run() {
-
         val info = SystemInfoProvider.getSystemInfo()
+        
     }
 }

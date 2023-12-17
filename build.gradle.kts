@@ -34,11 +34,18 @@ dependencies {
     implementation("io.ktor:ktor-serialization-kotlinx-json-jvm")
     implementation("io.ktor:ktor-server-cio-jvm")
 
+    implementation("io.ktor:ktor-client-core-jvm")
+    implementation("io.ktor:ktor-client-cio-jvm")
+    implementation("io.ktor:ktor-client-auth-jvm")
+    implementation("io.ktor:ktor-client-content-negotiation-jvm")
+
+
     implementation("com.google.code.gson:gson:2.9.0")
     implementation("ch.qos.logback:logback-classic:$logback_version")
     implementation("com.github.oshi:oshi-core:6.1.6")
     implementation("net.java.dev.jna:jna:5.11.0")
     implementation("net.java.dev.jna:jna-platform:5.11.0")
+    implementation("io.ktor:ktor-client-auth:2.3.7")
 
     testImplementation("io.ktor:ktor-server-tests-jvm")
     testImplementation("org.jetbrains.kotlin:kotlin-test-junit:$kotlin_version")
