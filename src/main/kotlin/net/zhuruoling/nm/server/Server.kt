@@ -1,8 +1,10 @@
 package net.zhuruoling.nm.server
 
+import io.ktor.client.plugins.cache.storage.*
 import io.ktor.server.application.*
 import io.ktor.server.cio.*
 import io.ktor.server.engine.*
+import net.zhuruoling.nm.server.fs.FileStore
 import net.zhuruoling.nm.server.plugins.configureMonitoring
 import net.zhuruoling.nm.server.plugins.configureRouting
 import net.zhuruoling.nm.server.plugins.configureSecurity
@@ -32,6 +34,7 @@ object Server : net.zhuruoling.nm.application.Application() {
             saveConfig<ServerConfig>(configPath, serverConfig)
         }
         serverConfig = config
+        FileStore.configure(serverConfig.servers, serverConfig.fileStoreSetting)
         embeddedServer(CIO, port = serverConfig.port, host = "0.0.0.0", module = Application::module, configure = {
             this.reuseAddress = true
         }).start(wait = true)

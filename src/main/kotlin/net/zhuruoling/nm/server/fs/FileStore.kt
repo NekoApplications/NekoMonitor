@@ -1,6 +1,7 @@
 package net.zhuruoling.nm.server.fs
 
 import org.slf4j.LoggerFactory
+import java.lang.IllegalArgumentException
 import java.util.concurrent.ExecutorService
 import java.util.concurrent.Executors
 import kotlin.io.path.Path
@@ -13,6 +14,7 @@ object FileStore {
     private lateinit var setting: FileStoreSetting
     private lateinit var rollingPolicy: RollingPolicyBase
     private lateinit var executorService: ExecutorService
+
     fun configure(poolNames: List<String>, setting: FileStoreSetting) {
         rollingPolicy = setting.rollingPolicy.policy.apply { configureRolling(setting) }
         executorService = Executors.newFixedThreadPool(Runtime.getRuntime().availableProcessors())
@@ -23,9 +25,13 @@ object FileStore {
             filePools += it to AgentDataFilePool(rollingPolicy, poolRoot, it, executorService)
         }
         filePools.values.forEach {
-            logger.info("Building file cache for pool ${it.name}")
+            logger.info("Building file cache for pool ${it.name} at ${it.poolRoot}")
             it.configure()
         }
+    }
+
+    operator fun get(key:String):AgentDataFilePool {
+        return filePools[key] ?: throw IllegalArgumentException("Pool $key not found.")
     }
 }
 

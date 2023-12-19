@@ -7,6 +7,7 @@ import net.zhuruoling.nm.util.json
 import java.io.InputStream
 import java.nio.file.Path
 import java.util.concurrent.ExecutorService
+import java.util.concurrent.Future
 
 @OptIn(ExperimentalSerializationApi::class)
 class AgentDataFilePool(
@@ -20,18 +21,24 @@ class AgentDataFilePool(
     name,
     fileNameFilter = rollingPolicy::fileNameFilter,
     fileCacheBuilder = {
-        try{
-            it.inputStream().use { s ->
+        try {
+            Result.success(it.inputStream().use { s ->
                 json.decodeFromStream<FileCache>(s)
-            }
-        }catch (e:Exception){
-            null
+            })
+        } catch (e: Exception) {
+            Result.failure(e)
         }
     }
 ) {
     override fun addFile(fileName: String, stream: InputStream, overwriteExisting: Boolean) {
         executor.submit {
             super.addFile(fileName, stream, overwriteExisting)
+        }
+    }
+
+    fun openInputStreamAsync(fileName: String): Future<InputStream> {
+        return executor.submit<InputStream> {
+            super.openInputStream(fileName)
         }
     }
 }

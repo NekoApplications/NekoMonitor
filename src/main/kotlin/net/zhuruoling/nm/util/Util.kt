@@ -48,3 +48,7 @@ inline fun <reified T> saveConfig(path: Path, obj: T) {
 fun String.md5():String{
     return hex(digest.digest(this.encodeToByteArray()))
 }
+
+fun generateAgentDataFileName(agent:String):String{
+    return "$agent-${System.currentTimeMillis()}-${generateNonce()}.json"
+}

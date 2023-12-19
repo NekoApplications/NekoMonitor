@@ -5,6 +5,7 @@ import io.ktor.server.auth.*
 import io.ktor.server.response.*
 import io.ktor.server.routing.*
 import io.ktor.util.*
+import kotlinx.coroutines.channels.produce
 import kotlinx.coroutines.runBlocking
 import net.zhuruoling.nm.server.Server
 import net.zhuruoling.nm.util.md5
@@ -17,6 +18,7 @@ val keyMD5: String by lazy {
 }
 
 fun Application.configureSecurity() {
+    log.info("Configuring authentication.")
     Server.serverConfig.servers.forEach {
         userCredentials += it.md5() to it
     }
@@ -31,5 +33,22 @@ fun Application.configureSecurity() {
                 }
             }
         }
+
+        provider("dataQuery"){
+            authenticate {
+                val accessToken = it.call.request.headers["Access-Key"] ?: run {
+                    it.error("NoAccessToken", AuthenticationFailedCause.NoCredentials)
+                    return@authenticate
+                }
+                val clientName = it.call.request.headers["Client-Name"] ?: "Client"
+                if (accessToken == Server.serverConfig.serverAccessKey){
+                    it.principal("dataQuery", AccessTokenPrincipal(clientName))
+                }else{
+                    it.error("AccessTokenMismatch", AuthenticationFailedCause.InvalidCredentials)
+                }
+            }
+        }
     }
 }
+
+data class AccessTokenPrincipal(val clientName:String):Principal

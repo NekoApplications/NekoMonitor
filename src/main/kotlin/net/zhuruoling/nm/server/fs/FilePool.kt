@@ -6,12 +6,12 @@ import java.nio.file.FileAlreadyExistsException
 import java.nio.file.Path
 import kotlin.io.path.*
 
-open class FilePool<T>(
+open class FilePool<T : Any>(
     val rollingPolicy: RollingPolicyBase,
     val storeRoot: Path,
     val name: String,
     val fileNameFilter: (Path) -> Boolean = { true },
-    val fileCacheBuilder: (File) -> T? = { null }
+    val fileCacheBuilder: (File) -> Result<T>
 ) {
     val poolRoot = storeRoot / name
 
@@ -28,9 +28,12 @@ open class FilePool<T>(
         }
         poolRoot.listDirectoryEntries().forEach {
             if (fileNameFilter(it)) {
-                val fc = fileCacheBuilder(it.toFile()) ?: return@forEach
-                fileCaches[it.name] = fc
-                files[it.name] = it.toFile()
+                fileCacheBuilder(it.toFile()).fold({ value ->
+                    fileCaches[it.name] = value
+                    files[it.name] = it.toFile()
+                }){
+                    return@forEach
+                }
             }
         }
     }
@@ -48,7 +51,9 @@ open class FilePool<T>(
             stream.transferTo(it)
         }
         files += fileName to file.toFile()
-        fileCaches[fileName] = fileCacheBuilder(file.toFile()) ?: return discardAddFile(fileName)
+        fileCacheBuilder(file.toFile()).fold({fileCaches[fileName] = it}){
+            return discardAddFile(fileName)
+        }
     }
 
     @Synchronized
