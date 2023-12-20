@@ -17,7 +17,8 @@ object Agent : Application() {
     override val applicationId: String
         get() = "agent"
 
-    private lateinit var agentConfig: AgentConfig
+    lateinit var agentConfig: AgentConfig
+    val uploadThread = UploadThread()
     private lateinit var configPath: Path
     private val timer = Timer()
 
@@ -50,9 +51,10 @@ object Agent : Application() {
             }
             install(ContentNegotiation)
         }
-        logger.info("Upload timer started.")
+        uploadThread.start()
+        logger.info("Starting upload timer.")
         timer.scheduleAtFixedRate(
-            AgentSystemInfoUploadTask(),
+            SystemInfoUploadTask(),
             agentConfig.uploadIntervalSeconds * 1000L,
             agentConfig.uploadIntervalSeconds * 1000L
         )

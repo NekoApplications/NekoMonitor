@@ -4,10 +4,10 @@ import kotlinx.serialization.Serializable
 
 @Serializable
 data class AgentUpstreamData(
-    val uploadTime: Long,
+    var uploadTime: Long,
     val agentName: String,
     val infoCaptureTime: Long,
-    val system: SystemUploadInfo,
-    val previousUploadFailed:Boolean,
-    val uploadFailReason: List<String>
+    val systemInfo: SystemUploadInfo,
+    var previousUploadFailed:Boolean,
+    var uploadFailReason: List<String>
 )

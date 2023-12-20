@@ -18,7 +18,6 @@ import net.zhuruoling.nm.util.loadConfig
 import kotlin.math.log10
 import kotlin.properties.Delegates
 
-@OptIn(ExperimentalSerializationApi::class)
 fun Application.configureRouting() {
     routing {
         get("/") {
@@ -37,6 +36,7 @@ fun Application.configureRouting() {
                             dataStream,
                             true
                         )
+                        call.respond(DataUploadResult(DataUploadResult.Result.SUCCESS, ""))
                     } catch (e: Exception) {
                         call.respond(DataUploadResult(DataUploadResult.Result.FAILURE, "Exception: $e"))
                     }
