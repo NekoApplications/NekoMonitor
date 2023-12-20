@@ -1,14 +1,9 @@
 package net.zhuruoling.nm.server
 
-import io.ktor.client.plugins.cache.storage.*
 import io.ktor.server.application.*
 import io.ktor.server.cio.*
 import io.ktor.server.engine.*
 import net.zhuruoling.nm.server.fs.FileStore
-import net.zhuruoling.nm.server.plugins.configureMonitoring
-import net.zhuruoling.nm.server.plugins.configureRouting
-import net.zhuruoling.nm.server.plugins.configureSecurity
-import net.zhuruoling.nm.server.plugins.configureSerialization
 import net.zhuruoling.nm.util.loadConfig
 import net.zhuruoling.nm.util.saveConfig
 import java.nio.file.Path

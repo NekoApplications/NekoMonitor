@@ -108,6 +108,8 @@ class UploadThread : Thread("UploadThread") {
         return runBlocking {
             runCatching {
                 val resp = client.post(url = Url(getUploadUrl())) {
+                    header("Username", credentials.username)
+                    header("Password", credentials.password)
                     setBody(item)
                     contentType(ContentType.Application.Json)
                 }
