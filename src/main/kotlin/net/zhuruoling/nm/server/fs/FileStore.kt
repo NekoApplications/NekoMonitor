@@ -5,7 +5,9 @@ import java.lang.IllegalArgumentException
 import java.util.concurrent.ExecutorService
 import java.util.concurrent.Executors
 import kotlin.io.path.Path
+import kotlin.io.path.createDirectories
 import kotlin.io.path.div
+import kotlin.io.path.notExists
 
 object FileStore {
     private val logger = LoggerFactory.getLogger("FileStore")
@@ -20,9 +22,11 @@ object FileStore {
         executorService = Executors.newFixedThreadPool(Runtime.getRuntime().availableProcessors())
         this.setting = setting
         logger.info("Initialising FileStore.")
+        if (fileStoreRoot.notExists()){
+            fileStoreRoot.createDirectories()
+        }
         poolNames.forEach {
-            val poolRoot = fileStoreRoot / it
-            filePools += it to AgentDataFilePool(rollingPolicy, poolRoot, it, executorService)
+            filePools += it to AgentDataFilePool(rollingPolicy, fileStoreRoot, it, executorService)
         }
         filePools.values.forEach {
             logger.info("Building file cache for pool ${it.name} at ${it.poolRoot}")

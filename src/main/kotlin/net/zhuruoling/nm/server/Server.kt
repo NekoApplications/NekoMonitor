@@ -18,7 +18,7 @@ object Server : net.zhuruoling.nm.application.Application() {
     override val applicationId: String
         get() = "server"
 
-    lateinit var serverConfig: ServerConfig
+    var serverConfig: ServerConfig = ServerConfig()
     private lateinit var configPath: Path
 
     override fun run(args: List<String>) {
@@ -29,21 +29,13 @@ object Server : net.zhuruoling.nm.application.Application() {
                 "./nm-server.json"
             }
         )
-        val (exists, config) = loadConfig<ServerConfig>(configPath)
-        if (exists) {
-            saveConfig<ServerConfig>(configPath, serverConfig)
-        }
+        val (_, config) = loadConfig<ServerConfig>(configPath, ServerConfig())
         serverConfig = config
+        saveConfig<ServerConfig>(configPath, serverConfig)
+        logger.info("Using config: $serverConfig")
         FileStore.configure(serverConfig.servers, serverConfig.fileStoreSetting)
         embeddedServer(CIO, port = serverConfig.port, host = "0.0.0.0", module = Application::module, configure = {
             this.reuseAddress = true
         }).start(wait = true)
     }
-}
-
-fun Application.module() {
-    configureSecurity()
-    configureMonitoring()
-    configureSerialization()
-    configureRouting()
 }

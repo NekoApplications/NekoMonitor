@@ -3,8 +3,10 @@ package net.zhuruoling
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.encodeToString
 import kotlinx.serialization.json.Json
+import net.zhuruoling.nm.agent.AgentConfig
 import net.zhuruoling.nm.agent.SystemInfoProvider
 import net.zhuruoling.nm.data.AgentUpstreamData
+import net.zhuruoling.nm.server.ServerConfig
 import net.zhuruoling.nm.util.json
 import kotlin.test.Test
 
@@ -35,5 +37,7 @@ class ApplicationTest {
             {"a":"wdnmd","b":114514, "c": 1919810}
         """.trimIndent()
         println(json.decodeFromString<SZ>(data))
+        println(json.encodeToString(AgentConfig()))
+        println(json.encodeToString(ServerConfig()))
     }
 }

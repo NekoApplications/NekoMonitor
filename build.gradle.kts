@@ -39,7 +39,6 @@ dependencies {
     implementation("io.ktor:ktor-client-auth-jvm")
     implementation("io.ktor:ktor-client-content-negotiation-jvm")
 
-
     implementation("com.google.code.gson:gson:2.9.0")
     implementation("ch.qos.logback:logback-classic:$logback_version")
     implementation("com.github.oshi:oshi-core:6.1.6")

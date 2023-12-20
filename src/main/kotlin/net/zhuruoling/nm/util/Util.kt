@@ -12,9 +12,11 @@ import kotlin.io.path.*
 
 
 val json = Json {
-    this.prettyPrint = true
-    this.ignoreUnknownKeys = true
+    prettyPrint = true
+    ignoreUnknownKeys = true
+    encodeDefaults = true
 }
+
 private val digest = MessageDigest.getInstance("MD5")
 
 
@@ -27,11 +29,11 @@ fun getVersionInfoString(product: String): String {
     } $buildTime)"
 }
 
-inline fun <reified T> loadConfig(path: Path): Pair<Boolean, T> {
+inline fun <reified T> loadConfig(path: Path, default:T): Pair<Boolean, T> {
     var ret = true
     if (!path.exists()){
         path.createFile()
-        path.writeText(json.encodeToString(ServerConfig()))
+        path.writeText(json.encodeToString<T>(default))
         ret = false
     }
     return ret to path.reader().use {
@@ -42,7 +44,8 @@ inline fun <reified T> loadConfig(path: Path): Pair<Boolean, T> {
 inline fun <reified T> saveConfig(path: Path, obj: T) {
     path.deleteIfExists()
     path.createFile()
-    path.writeText(json.encodeToString(obj))
+    val text = json.encodeToString<T>(obj)
+    path.writeText(text)
 }
 
 fun String.md5():String{

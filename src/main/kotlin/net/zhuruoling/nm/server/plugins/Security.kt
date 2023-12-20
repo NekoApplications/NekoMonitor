@@ -2,14 +2,8 @@ package net.zhuruoling.nm.server.plugins
 
 import io.ktor.server.application.*
 import io.ktor.server.auth.*
-import io.ktor.server.response.*
-import io.ktor.server.routing.*
-import io.ktor.util.*
-import kotlinx.coroutines.channels.produce
-import kotlinx.coroutines.runBlocking
 import net.zhuruoling.nm.server.Server
 import net.zhuruoling.nm.util.md5
-import java.security.MessageDigest
 
 
 val userCredentials = mutableMapOf<String, String>()
@@ -22,28 +16,30 @@ fun Application.configureSecurity() {
     Server.serverConfig.servers.forEach {
         userCredentials += it.md5() to it
     }
+    println(userCredentials)
     authentication {
         basic("nmAuth") {
             validate {
+                println("name: ${it.name}, password: ${it.password}, keyMD5: $keyMD5")
                 val name = userCredentials[it.name] ?: return@validate null
-                if (it.password == keyMD5){
+                if (it.password == keyMD5) {
                     return@validate UserIdPrincipal(name)
-                }else{
+                } else {
                     return@validate null
                 }
             }
         }
 
-        provider("dataQuery"){
+        provider("dataQuery") {
             authenticate {
                 val accessToken = it.call.request.headers["Access-Key"] ?: run {
                     it.error("NoAccessToken", AuthenticationFailedCause.NoCredentials)
                     return@authenticate
                 }
                 val clientName = it.call.request.headers["Client-Name"] ?: "Client"
-                if (accessToken == Server.serverConfig.serverAccessKey){
+                if (accessToken == Server.serverConfig.serverAccessKey) {
                     it.principal("dataQuery", AccessTokenPrincipal(clientName))
-                }else{
+                } else {
                     it.error("AccessTokenMismatch", AuthenticationFailedCause.InvalidCredentials)
                 }
             }
@@ -51,4 +47,4 @@ fun Application.configureSecurity() {
     }
 }
 
-data class AccessTokenPrincipal(val clientName:String):Principal
+data class AccessTokenPrincipal(val clientName: String) : Principal
