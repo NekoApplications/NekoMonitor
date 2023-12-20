@@ -16,9 +16,8 @@ fun Application.configureSecurity() {
     Server.serverConfig.servers.forEach {
         userCredentials += it.md5() to it
     }
-    println(userCredentials)
     authentication {
-        basic("nmAuth") {
+        basic(name = "nmAuth") {
             validate {
                 println("name: ${it.name}, password: ${it.password}, keyMD5: $keyMD5")
                 val name = userCredentials[it.name] ?: return@validate null
@@ -45,6 +44,9 @@ fun Application.configureSecurity() {
             }
         }
     }
+//    authentication {
+//
+//    }
 }
 
 data class AccessTokenPrincipal(val clientName: String) : Principal

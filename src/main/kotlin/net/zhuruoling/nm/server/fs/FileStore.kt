@@ -8,6 +8,7 @@ import kotlin.io.path.Path
 import kotlin.io.path.createDirectories
 import kotlin.io.path.div
 import kotlin.io.path.notExists
+import kotlin.time.measureTime
 
 object FileStore {
     private val logger = LoggerFactory.getLogger("FileStore")
@@ -22,16 +23,24 @@ object FileStore {
         executorService = Executors.newFixedThreadPool(Runtime.getRuntime().availableProcessors())
         this.setting = setting
         logger.info("Initialising FileStore.")
-        if (fileStoreRoot.notExists()){
-            fileStoreRoot.createDirectories()
+        measureTime{
+            if (fileStoreRoot.notExists()) {
+                fileStoreRoot.createDirectories()
+            }
+            poolNames.forEach {
+                filePools += it to AgentDataFilePool(rollingPolicy, fileStoreRoot, it, executorService)
+            }
+            filePools.values.forEach {
+                logger.info("Building file cache for pool ${it.name} at ${it.poolRoot}")
+                it.configure()
+            }
+        }.apply {
+            var metadataCount = 0
+            filePools.values.forEach { metadataCount += it.fileCaches.count() }
+            logger.info("Prepared FileStore for $metadataCount files in ${this.inWholeMilliseconds} milliseconds")
         }
-        poolNames.forEach {
-            filePools += it to AgentDataFilePool(rollingPolicy, fileStoreRoot, it, executorService)
-        }
-        filePools.values.forEach {
-            logger.info("Building file cache for pool ${it.name} at ${it.poolRoot}")
-            it.configure()
-        }
+
+
     }
 
     operator fun get(key:String):AgentDataFilePool {

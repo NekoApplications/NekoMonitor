@@ -23,25 +23,26 @@ fun Application.configureRouting() {
         get("/") {
             call.respondText(getVersionInfoString("NekoMonitor::server"))
         }
-        authenticate("nmAuth") {
-            route("/status") {
-                post("upload") {
-                    try {
-                        val content = call.receive<AgentUpstreamData>()
-                        this@configureRouting.log.info(content.toString())
-                        val pool = FileStore[content.agentName]
-                        val dataStream = json.encodeToString<AgentUpstreamData>(content).byteInputStream(Charsets.UTF_8)
-                        pool.addFile(
-                            generateAgentDataFileName(content.agentName),
-                            dataStream,
-                            true
-                        )
-                        call.respond(DataUploadResult(DataUploadResult.Result.SUCCESS, ""))
-                    } catch (e: Exception) {
-                        call.respond(DataUploadResult(DataUploadResult.Result.FAILURE, "Exception: $e"))
-                    }
+        route("/status") {
+            post("upload") {
+                try {
+                    val content = call.receive<AgentUpstreamData>()
+                    this@configureRouting.log.info(content.toString())
+                    val pool = FileStore[content.agentName]
+                    val dataStream = json.encodeToString<AgentUpstreamData>(content).byteInputStream(Charsets.UTF_8)
+                    pool.addFile(
+                        generateAgentDataFileName(content.agentName),
+                        dataStream,
+                        true
+                    )
+                    call.respond(DataUploadResult(DataUploadResult.Result.SUCCESS, ""))
+                } catch (e: Exception) {
+                    call.respond(DataUploadResult(DataUploadResult.Result.FAILURE, "Exception: $e"))
                 }
             }
+        }
+        authenticate("nmAuth") {
+
         }
         authenticate("dataQuery") {
             route("query"){

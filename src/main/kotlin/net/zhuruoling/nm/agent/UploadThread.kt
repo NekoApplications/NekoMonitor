@@ -59,8 +59,6 @@ class UploadThread : Thread("UploadThread") {
 
     override fun run() {
         logger.info("Starting info upload thread.")
-        println(credentials.username)
-        println(credentials.password)
         while (true) {
             if (!uploadTriggered.get()) {
                 LockSupport.parkNanos(100)
