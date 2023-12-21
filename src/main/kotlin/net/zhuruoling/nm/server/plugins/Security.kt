@@ -39,9 +39,6 @@ fun Application.configureSecurity() {
             }
         }
     }
-//    authentication {
-//
-//    }
 }
 
 data class AccessTokenPrincipal(val clientName: String) : Principal

@@ -1,7 +1,6 @@
 package net.zhuruoling.nm.agent
 
 import io.ktor.client.*
-import io.ktor.client.call.*
 import io.ktor.client.engine.cio.*
 import io.ktor.client.plugins.auth.*
 import io.ktor.client.plugins.auth.providers.*
@@ -13,7 +12,7 @@ import io.ktor.serialization.kotlinx.json.*
 import kotlinx.coroutines.runBlocking
 import kotlinx.serialization.json.Json
 import net.zhuruoling.nm.data.AgentUpstreamData
-import net.zhuruoling.nm.data.DataUploadResult
+import net.zhuruoling.nm.data.QueryResult
 import net.zhuruoling.nm.util.json
 import net.zhuruoling.nm.util.md5
 import org.slf4j.LoggerFactory
@@ -117,7 +116,7 @@ class UploadThread : Thread("UploadThread") {
                 HttpResp(
                     resp.status,
                     try {
-                        json.decodeFromString<DataUploadResult>(text)
+                        json.decodeFromString<QueryResult>(text)
                     } catch (_: Exception) {
                         null
                     },
@@ -136,5 +135,5 @@ class UploadThread : Thread("UploadThread") {
         uploadTriggered.set(true)
     }
 
-    data class HttpResp(val statusCode: HttpStatusCode, val uploadResult: DataUploadResult?, val raw: String)
+    data class HttpResp(val statusCode: HttpStatusCode, val uploadResult: QueryResult?, val raw: String)
 }
