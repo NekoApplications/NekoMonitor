@@ -39,12 +39,17 @@ object FileStore {
             filePools.values.forEach { metadataCount += it.fileCaches.count() }
             logger.info("Prepared FileStore for $metadataCount files in ${this.inWholeMilliseconds} milliseconds")
         }
-
-
     }
 
     operator fun get(key:String):AgentDataFilePool {
         return filePools[key] ?: throw IllegalArgumentException("Pool $key not found.")
     }
 }
+
+data class DataQueryParameters(
+    val fromTime: Int,
+    val toTime: Int?,
+    val countLimit: Int = 160,
+    val compress: Boolean = false
+)
 

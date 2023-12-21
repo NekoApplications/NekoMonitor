@@ -11,7 +11,8 @@ open class FilePool<T : Any>(
     val storeRoot: Path,
     val name: String,
     val fileNameFilter: (Path) -> Boolean = { true },
-    val fileCacheBuilder: (File) -> Result<T>
+    val fileCacheBuilder: (File) -> Result<T>,
+    val indexedFileCacheBuilder: (T) -> Long
 ) {
     val poolRoot = storeRoot / name
 
@@ -20,6 +21,15 @@ open class FilePool<T : Any>(
 
     @get:Synchronized
     val fileCaches = mutableMapOf<String, T>()
+
+    @get:Synchronized
+    protected val reversedFileCache = mutableMapOf<T, String>()
+
+    @get:Synchronized
+    val indexCaches = mutableListOf<Long>()
+
+    @get:Synchronized
+    val fileCacheByIndex = mutableMapOf<Long, T>()
 
     @Synchronized
     open fun configure() {
@@ -31,11 +41,17 @@ open class FilePool<T : Any>(
                 fileCacheBuilder(it.toFile()).fold({ value ->
                     fileCaches[it.name] = value
                     files[it.name] = it.toFile()
-                }){
+                }) {
                     return@forEach
                 }
             }
         }
+        fileCaches.values.forEach {
+            val index = indexedFileCacheBuilder(it)
+            indexCaches += index
+            fileCacheByIndex += index to it
+        }
+        indexCaches.sort()
     }
 
     @Synchronized
@@ -51,7 +67,7 @@ open class FilePool<T : Any>(
             stream.transferTo(it)
         }
         files += fileName to file.toFile()
-        fileCacheBuilder(file.toFile()).fold({fileCaches[fileName] = it}){
+        fileCacheBuilder(file.toFile()).fold({ fileCaches[fileName] = it }) {
             return discardAddFile(fileName)
         }
     }

@@ -28,6 +28,9 @@ class AgentDataFilePool(
         } catch (e: Exception) {
             Result.failure(e)
         }
+    },
+    indexedFileCacheBuilder = {
+        it.uploadTime
     }
 ) {
     override fun addFile(fileName: String, stream: InputStream, overwriteExisting: Boolean) {
@@ -41,4 +44,49 @@ class AgentDataFilePool(
             super.openInputStream(fileName)
         }
     }
+
+    @Synchronized
+    fun select(param: DataQueryParameters): List<String> {
+        if (indexCaches.isEmpty()) return listOf()
+        try {
+            var low = 0
+            var high = indexCaches.size - 1
+            var nearestIndex = -1
+            while (low <= high) {
+                val mid = (low + high).ushr(1) // safe from overflows
+                val midVal = indexCaches[mid]
+                val cmp = param.fromTime - midVal
+                if (high - low <= 3) {
+                    nearestIndex = mid
+                    break
+                }
+                if (cmp < 0)
+                    low = mid + 1
+                else if (cmp > 0) {
+                    high = mid - 1
+                } else {
+                    nearestIndex = mid
+                    break
+                }
+            }
+            var index = nearestIndex
+            val result = mutableListOf<String>()
+            if (param.toTime != null) {
+                while (indexCaches[index] <= param.toTime && nearestIndex - index < param.countLimit) {
+                    result += reversedFileCache[fileCacheByIndex[index.toLong()]] ?: continue
+                    index++
+                }
+            } else {
+                while (nearestIndex - index < param.countLimit) {
+                    result += reversedFileCache[fileCacheByIndex[index.toLong()]] ?: continue
+                    index++
+                }
+            }
+            return result
+        } catch (_: Exception) {
+            return listOf()
+        }
+    }
+
+
 }
