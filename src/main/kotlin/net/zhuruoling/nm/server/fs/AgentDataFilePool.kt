@@ -48,43 +48,21 @@ class AgentDataFilePool(
     @Synchronized
     fun select(param: DataQueryParameters): List<String> {
         if (indexCaches.isEmpty()) return listOf()
-        try {
-            var low = 0
-            var high = indexCaches.size - 1
-            var nearestIndex = -1
-            while (low <= high) {
-                val mid = (low + high).ushr(1) // safe from overflows
-                val midVal = indexCaches[mid]
-                val cmp = param.fromTime - midVal
-                if (high - low <= 3) {
-                    nearestIndex = mid
-                    break
-                }
-                if (cmp < 0)
-                    low = mid + 1
-                else if (cmp > 0) {
-                    high = mid - 1
-                } else {
-                    nearestIndex = mid
-                    break
-                }
-            }
-            var index = nearestIndex
-            val result = mutableListOf<String>()
-            if (param.toTime != null) {
-                while (indexCaches[index] <= param.toTime && nearestIndex - index < param.countLimit) {
-                    result += reversedFileCache[fileCacheByIndex[index.toLong()]] ?: continue
-                    index++
-                }
+        var count = 0
+        return buildList {
+            if (param.toTime == null) {
+                indexCaches.filter { it >= param.fromTime }
             } else {
-                while (nearestIndex - index < param.countLimit) {
-                    result += reversedFileCache[fileCacheByIndex[index.toLong()]] ?: continue
-                    index++
+                indexCaches.filter { it >= param.fromTime && it <= param.toTime }
+            }.forEach {
+                if (count >= param.countLimit){
+                    return@buildList
                 }
+                val fc = fileCacheByIndex[it] ?: return@forEach
+                val name = reversedFileCache[fc] ?: return@forEach
+                this += name
+                count++
             }
-            return result
-        } catch (_: Exception) {
-            return listOf()
         }
     }
 

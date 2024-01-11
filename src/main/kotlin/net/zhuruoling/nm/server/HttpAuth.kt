@@ -6,9 +6,13 @@ import io.ktor.server.request.*
 import io.ktor.server.response.*
 import io.ktor.util.pipeline.*
 import net.zhuruoling.nm.data.QueryResult
+import net.zhuruoling.nm.data.Result
 import net.zhuruoling.nm.server.plugins.keyMD5
 import net.zhuruoling.nm.server.plugins.userCredentials
+import net.zhuruoling.nm.util.EnvType
+import net.zhuruoling.nm.util.Properties
 import java.lang.IllegalArgumentException
+import java.util.*
 
 interface AuthMethod {
     suspend fun auth(call: ApplicationCall): UserPrincipal?
@@ -48,6 +52,13 @@ object HttpAuthManager {
     init {
         map["infoUpload"] = InfoUploadAuthMethod
         map["dataQuery"] = DataQueryAuthMethod
+        if (Properties.envType == EnvType.DEVELOPMENT) {
+            map["debug"] = object : AuthMethod {
+                override suspend fun auth(call: ApplicationCall): UserPrincipal {
+                    return UserPrincipal("debug");
+                }
+            }
+        }
     }
 
     suspend fun authForResult(id:String?, call: ApplicationCall): UserPrincipal? {
@@ -58,11 +69,12 @@ object HttpAuthManager {
 
 
 suspend fun PipelineContext<Unit, ApplicationCall>.auth(block: suspend PipelineContext<Unit, ApplicationCall>.(UserPrincipal) -> Unit) {
-    val authMethod = call.request.header("AuthMethod")
+    val authMethod = call.request.header("Auth-Method")
     val principal = try {
-        HttpAuthManager.authForResult(authMethod, call) ?: return call.respond(status = HttpStatusCode.Unauthorized, QueryResult(QueryResult.Result.AUTH_FAILED, ""))
+        HttpAuthManager.authForResult(authMethod, call) ?: return call.respond(status = HttpStatusCode.Unauthorized, QueryResult(
+            Result.AUTH_FAILED, ""))
     }catch (e:Exception){
-        return call.respond(status = HttpStatusCode.Unauthorized, QueryResult(QueryResult.Result.AUTH_FAILED, e.toString()))
+        return call.respond(status = HttpStatusCode.Unauthorized, QueryResult(Result.AUTH_FAILED, e.toString()))
     }
     this.block(principal)
 }

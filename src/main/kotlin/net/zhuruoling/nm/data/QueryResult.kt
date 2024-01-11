@@ -9,7 +9,12 @@ data class QueryResult(
     val data: List<AgentUpstreamData> = listOf(),
     val compressedData: String = ""
 ) {
-    enum class Result {
-        SUCCESS, FAILURE, AUTH_FAILED
-    }
 }
+
+@Serializable
+data class QueryAllResult(
+    val result: Result,
+    val message: String = "",
+    val data: Map<String,AgentUpstreamData> = mapOf(),
+    val compressedData: String = ""
+)

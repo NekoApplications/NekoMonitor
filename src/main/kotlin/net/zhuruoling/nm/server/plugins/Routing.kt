@@ -9,7 +9,9 @@ import kotlinx.serialization.ExperimentalSerializationApi
 import kotlinx.serialization.encodeToString
 import kotlinx.serialization.json.decodeFromStream
 import net.zhuruoling.nm.data.AgentUpstreamData
+import net.zhuruoling.nm.data.QueryAllResult
 import net.zhuruoling.nm.data.QueryResult
+import net.zhuruoling.nm.data.Result
 import net.zhuruoling.nm.server.Server
 import net.zhuruoling.nm.server.auth
 import net.zhuruoling.nm.server.fs.DataQueryParameters
@@ -21,7 +23,7 @@ val keyMD5: String by lazy {
 }
 val userCredentials by lazy {
     buildMap {
-        Server.serverConfig.servers.forEach {
+        Server.serverConfig.agents.forEach {
             this += it.md5() to it
         }
     }
@@ -46,45 +48,69 @@ fun Application.configureRouting() {
                             dataStream,
                             true
                         )
-                        call.respond(QueryResult(QueryResult.Result.SUCCESS, ""))
+                        call.respond(QueryResult(Result.SUCCESS, ""))
                     } catch (e: Exception) {
-                        call.respond(QueryResult(QueryResult.Result.FAILURE, "Exception: $e"))
+                        call.respond(QueryResult(Result.FAILURE, "Exception: $e"))
                     }
                 }
             }
         }
         route("/query") {
-            get("{name?}") {
-                return@get auth {
-                    val name = call.parameters["name"] ?: return@auth call.respondText(
-                        "Missing agent name",
-                        status = HttpStatusCode.BadRequest
-                    )
-                    try {
-                        if (name !in Server.serverConfig.servers) {
-                            return@auth call.respond(
-                                status = HttpStatusCode.BadRequest,
-                                QueryResult(QueryResult.Result.FAILURE, "Agent $name not found.")
-                            )
-                        }
-                        val param = try {
-                            getDataQueryParameters(call)
-                        } catch (e: Exception) {
-                            return@auth call.respond(
-                                status = HttpStatusCode.BadRequest,
-                                QueryResult(QueryResult.Result.FAILURE, e.toString())
-                            )
-                        }
-                        val fileList = FileStore[name].select(param)
-                        val data = buildList {
-                            fileList.forEach {
-                                this += json.decodeFromStream<AgentUpstreamData>(FileStore[name].openInputStream(it))
+            route("status") {
+                get("{name?}") {
+                    return@get auth {
+                        val name = call.parameters["name"] ?: return@auth call.respondText(
+                            "Missing agent name",
+                            status = HttpStatusCode.BadRequest
+                        )
+                        try {
+                            if (name !in Server.serverConfig.agents) {
+                                return@auth call.respond(
+                                    status = HttpStatusCode.BadRequest,
+                                    QueryResult(Result.FAILURE, "Agent $name not found.")
+                                )
                             }
+                            val param = try {
+                                getDataQueryParameters(call)
+                            } catch (e: Exception) {
+                                e.printStackTrace()
+                                return@auth call.respond(
+                                    status = HttpStatusCode.BadRequest,
+                                    QueryResult(Result.FAILURE, e.toString())
+                                )
+                            }
+                            val fileList = FileStore[name].select(param)
+                            val data = buildList {
+                                fileList.forEach {
+                                    this += json.decodeFromStream<AgentUpstreamData>(FileStore[name].openInputStream(it))
+                                }
+                            }
+                            call.respond(status = HttpStatusCode.OK, QueryResult(Result.SUCCESS, "", data))
+                        } catch (e: Exception) {
+                            call.respond(status = HttpStatusCode.OK, QueryResult(Result.FAILURE, e.toString()))
                         }
-                        call.respond(status = HttpStatusCode.OK, QueryResult(QueryResult.Result.SUCCESS, "", data))
-                    } catch (e: Exception) {
-                        call.respond(status = HttpStatusCode.OK, QueryResult(QueryResult.Result.FAILURE, e.toString()))
                     }
+                }
+            }
+            get("all") {
+                auth {
+                    return@auth call.respond(
+                        status = HttpStatusCode.OK,
+                        QueryAllResult(Result.SUCCESS, data = buildMap {
+                            Server.serverConfig.agents.forEach {
+                                try {
+                                    val data = FileStore[it].run {
+                                        json.decodeFromStream<AgentUpstreamData>(
+                                            openInputStream(reversedFileCache[fileCacheByIndex[indexCaches.last()]]!!)
+                                        )
+                                    }
+                                    this[it] = data
+                                } catch (e: Exception) {
+                                    return@forEach
+                                }
+                            }
+                        })
+                    )
                 }
             }
         }
@@ -93,9 +119,9 @@ fun Application.configureRouting() {
 
 fun getDataQueryParameters(call: ApplicationCall): DataQueryParameters {
     val q = call.request.queryParameters
-    val fromTime = (q["fromTime"] ?: throw RuntimeException("fromTime expected")).toInt()
-    val toTime = q["toTime"].toString().toIntOrNull()
-    val countLimit = q["countLimit"].toString().toIntOrNull() ?: 160
+    val fromTime = (q["fromTime"] ?: throw RuntimeException("fromTime expected")).toLong()
+    val toTime = q["toTime"].toString().toLongOrNull()
+    val countLimit = q["countLimit"].toString().toLongOrNull() ?: 160
     val compress = q["compress"].toString().toBooleanStrictOrNull() ?: false
     return DataQueryParameters(fromTime, toTime, countLimit, compress)
 }

@@ -3,8 +3,6 @@ package net.zhuruoling.nm.util
 import io.ktor.util.*
 import kotlinx.serialization.encodeToString
 import kotlinx.serialization.json.Json
-import net.zhuruoling.nm.server.Server
-import net.zhuruoling.nm.server.ServerConfig
 import java.nio.file.Path
 import java.security.MessageDigest
 import java.util.*
@@ -21,12 +19,12 @@ private val digest = MessageDigest.getInstance("MD5")
 
 
 fun getVersionInfoString(product: String): String {
-    val version = BuildProperties["version"]
-    val buildTimeMillis = BuildProperties["buildTime"]?.toLong() ?: 0L
+    val version = Properties["version"]
+    val buildTimeMillis = Properties["buildTime"]?.toLong() ?: 0L
     val buildTime = Date(buildTimeMillis)
-    return "NekoApplications::$product $version (${BuildProperties["branch"]}:${
-        BuildProperties["commitId"]?.substring(0, 7)
-    } $buildTime)"
+    return "NekoApplications::$product $version (${Properties["branch"]}:${
+        Properties["commitId"]?.substring(0, 7)
+    } $buildTime) environment:${Properties.envType.stringRepresentation()}"
 }
 
 inline fun <reified T> loadConfig(path: Path, default:T): Pair<Boolean, T> {

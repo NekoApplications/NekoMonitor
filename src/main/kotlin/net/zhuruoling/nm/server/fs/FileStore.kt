@@ -6,7 +6,6 @@ import java.util.concurrent.ExecutorService
 import java.util.concurrent.Executors
 import kotlin.io.path.Path
 import kotlin.io.path.createDirectories
-import kotlin.io.path.div
 import kotlin.io.path.notExists
 import kotlin.time.measureTime
 
@@ -47,9 +46,9 @@ object FileStore {
 }
 
 data class DataQueryParameters(
-    val fromTime: Int,
-    val toTime: Int?,
-    val countLimit: Int = 160,
+    val fromTime: Long,
+    val toTime: Long?,
+    val countLimit: Long = 160,
     val compress: Boolean = false
 )
 

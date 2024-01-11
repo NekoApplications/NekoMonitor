@@ -28,7 +28,7 @@ object Server : net.zhuruoling.nm.application.Application() {
         serverConfig = config
         saveConfig<ServerConfig>(configPath, serverConfig)
         logger.info("Using config: $serverConfig")
-        FileStore.configure(serverConfig.servers, serverConfig.fileStoreSetting)
+        FileStore.configure(serverConfig.agents, serverConfig.fileStoreSetting)
         embeddedServer(CIO, port = serverConfig.port, host = "0.0.0.0", module = Application::module, configure = {
             this.reuseAddress = true
         }).start(wait = true)

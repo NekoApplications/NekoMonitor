@@ -1,6 +1,7 @@
 package net.zhuruoling.nm.server.fs
 
 import java.io.File
+import java.io.FileNotFoundException
 import java.io.InputStream
 import java.nio.file.FileAlreadyExistsException
 import java.nio.file.Path
@@ -23,7 +24,7 @@ open class FilePool<T : Any>(
     val fileCaches = mutableMapOf<String, T>()
 
     @get:Synchronized
-    protected val reversedFileCache = mutableMapOf<T, String>()
+    val reversedFileCache = mutableMapOf<T, String>()
 
     @get:Synchronized
     val indexCaches = mutableListOf<Long>()
@@ -40,6 +41,7 @@ open class FilePool<T : Any>(
             if (fileNameFilter(it)) {
                 fileCacheBuilder(it.toFile()).fold({ value ->
                     fileCaches[it.name] = value
+                    reversedFileCache[value] = it.name
                     files[it.name] = it.toFile()
                 }) {
                     return@forEach
@@ -83,7 +85,7 @@ open class FilePool<T : Any>(
     @Synchronized
     open fun openInputStream(fileName: String): InputStream {
         val file = poolRoot / fileName
-        if (file.exists()) throw FileAlreadyExistsException(file.toString())
+        if (!file.exists()) throw FileNotFoundException(file.toString())
         return file.inputStream()
     }
 
