@@ -1,13 +1,13 @@
-package net.zhuruoling
+package icu.takeneko
 
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.encodeToString
 import kotlinx.serialization.json.Json
-import net.zhuruoling.nm.agent.AgentConfig
-import net.zhuruoling.nm.agent.SystemInfoProvider
-import net.zhuruoling.nm.data.AgentUpstreamData
-import net.zhuruoling.nm.server.ServerConfig
-import net.zhuruoling.nm.util.json
+import icu.takeneko.nm.agent.AgentConfig
+import icu.takeneko.nm.agent.SystemInfoProvider
+import icu.takeneko.nm.data.AgentUpstreamData
+import icu.takeneko.nm.server.ServerConfig
+import icu.takeneko.nm.util.json
 import kotlin.test.Test
 
 class ApplicationTest {
