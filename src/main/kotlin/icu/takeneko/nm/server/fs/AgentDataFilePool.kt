@@ -1,5 +1,6 @@
 package icu.takeneko.nm.server.fs
 
+import icu.takeneko.nm.data.AgentUpstreamData
 import kotlinx.serialization.ExperimentalSerializationApi
 import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.decodeFromStream
@@ -54,8 +55,8 @@ class AgentDataFilePool(
                 indexCaches.filter { it >= param.fromTime }
             } else {
                 indexCaches.filter { it >= param.fromTime && it <= param.toTime }
-            }.forEach {
-                if (count >= param.countLimit){
+            }.run { if (param.reverse) this.reversed() else this }.forEach {
+                if (count >= param.countLimit) {
                     return@buildList
                 }
                 val fc = fileCacheByIndex[it] ?: return@forEach

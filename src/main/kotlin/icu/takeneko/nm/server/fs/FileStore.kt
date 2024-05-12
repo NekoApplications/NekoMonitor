@@ -49,6 +49,7 @@ data class DataQueryParameters(
     val fromTime: Long,
     val toTime: Long?,
     val countLimit: Long = 160,
-    val compress: Boolean = false
+    val compress: Boolean = false,
+    val reverse: Boolean = false
 )
 

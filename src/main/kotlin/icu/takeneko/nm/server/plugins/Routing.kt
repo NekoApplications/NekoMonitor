@@ -57,15 +57,15 @@ fun Application.configureRouting() {
         }
         route("/query") {
             route("status") {
-                get("{name?}") {
-                    return@get auth {
-                        val name = call.parameters["name"] ?: return@auth call.respondText(
+                route("{name?}"){
+                    get {
+                        val name = call.parameters["name"] ?: return@get call.respondText(
                             "Missing agent name",
                             status = HttpStatusCode.BadRequest
                         )
                         try {
                             if (name !in Server.serverConfig.agents) {
-                                return@auth call.respond(
+                                return@get call.respond(
                                     status = HttpStatusCode.BadRequest,
                                     QueryResult(Result.FAILURE, "Agent $name not found.")
                                 )
@@ -74,7 +74,7 @@ fun Application.configureRouting() {
                                 getDataQueryParameters(call)
                             } catch (e: Exception) {
                                 e.printStackTrace()
-                                return@auth call.respond(
+                                return@get call.respond(
                                     status = HttpStatusCode.BadRequest,
                                     QueryResult(Result.FAILURE, e.toString())
                                 )
@@ -123,7 +123,8 @@ fun getDataQueryParameters(call: ApplicationCall): DataQueryParameters {
     val toTime = q["toTime"].toString().toLongOrNull()
     val countLimit = q["countLimit"].toString().toLongOrNull() ?: 160
     val compress = q["compress"].toString().toBooleanStrictOrNull() ?: false
-    return DataQueryParameters(fromTime, toTime, countLimit, compress)
+    val reverse = q["reverse"].toString().toBooleanStrictOrNull() ?: false
+    return DataQueryParameters(fromTime, toTime, countLimit, compress, reverse)
 }
 
 
